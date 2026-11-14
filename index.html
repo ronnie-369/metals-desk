@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Metals Desk | Gold and Silver ETFs in Plain English</title>
+<meta name="description" content="GOLDBEES and SILVERBEES prices, what is moving them, and whether today's conditions favour buying or selling. Updated through the trading day.">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#FBFBF9;--ink:#0A0A0A;--copper:#C0946D;--slate:#1A3C5B;--gray:#6B7280;--line:#E5E3DD;--white:#fff;--up:#2F6B4F;--down:#A33A2F;--amber:#B7791F}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-size:16px;line-height:1.5}
+.wrap{max-width:1100px;margin:0 auto;padding:28px 18px 70px}
+.kicker{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--copper);margin:0 0 8px}
+h1{font-family:'Playfair Display',serif;font-weight:600;font-size:clamp(26px,4vw,40px);line-height:1.1;margin:0 0 8px}
+.stand{color:var(--slate);font-size:17px;max-width:720px;margin:0 0 6px}
+.stamp{color:var(--gray);font-size:13px;margin:0 0 26px}
+.grid{display:grid;grid-template-columns:1fr;gap:16px}
+@media(min-width:860px){.grid{grid-template-columns:1fr 1fr}}
+.card{background:var(--white);border:1px solid var(--line);padding:22px}
+.name{font-family:'Playfair Display',serif;font-size:22px;margin:0}
+.sym{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--gray);letter-spacing:.1em}
+.price{font-family:'Playfair Display',serif;font-size:46px;line-height:1;margin:14px 0 4px}
+.chg{font-size:16px;font-weight:600}
+.up{color:var(--up)}.down{color:var(--down)}.flat{color:var(--gray)}.amber{color:var(--amber)}
+.meta{color:var(--gray);font-size:13px}
+.badge{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding:5px 10px;margin:14px 0 0;border:1px solid}
+.b-buy{color:var(--up);border-color:var(--up)}.b-sell{color:var(--down);border-color:var(--down)}.b-mid{color:var(--amber);border-color:var(--amber)}
+.range{margin:18px 0 4px}
+.range .bar{position:relative;height:6px;background:var(--line);border-radius:3px}
+.range .bar i{position:absolute;top:-5px;width:16px;height:16px;border-radius:50%;background:var(--ink);transform:translateX(-50%)}
+.range .lab{display:flex;justify-content:space-between;font-size:12px;color:var(--gray);margin-top:8px}
+.say{margin:16px 0 0;font-size:16px}
+.rets{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-top:18px;border-top:1px solid var(--line);padding-top:12px}
+.rets div{text-align:center}.rets b{display:block;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--gray);letter-spacing:.08em;font-weight:500}.rets span{font-size:14px;font-weight:600}
+.sec{margin-top:44px}
+h2{font-family:'Playfair Display',serif;font-weight:500;font-size:24px;margin:0 0 6px}
+.sub{color:var(--gray);margin:0 0 16px;max-width:720px}
+.dialwrap{display:grid;grid-template-columns:1fr;gap:16px}
+@media(min-width:860px){.dialwrap{grid-template-columns:1fr 1fr}}
+.dial svg{width:100%;max-width:340px;display:block;margin:0 auto}
+.dial .word{text-align:center;font-family:'Playfair Display',serif;font-size:24px;margin:-6px 0 14px}
+.why{list-style:none;padding:0;margin:0;border-top:1px solid var(--line)}
+.why li{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);font-size:15px}
+.why .dot{flex:0 0 12px;height:12px;border-radius:50%;margin-top:6px}
+.why b{display:block;font-weight:600}
+.why span{color:var(--gray);font-size:14px}
+.chart svg{width:100%;display:block}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--gray);margin-top:8px}
+.legend i{display:inline-block;width:18px;height:0;border-top:2px solid;margin-right:6px;vertical-align:middle}
+.drivers{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+@media(min-width:860px){.drivers{grid-template-columns:repeat(4,1fr)}}
+.drv{background:var(--white);border:1px solid var(--line);padding:16px}
+.drv .k{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--gray);letter-spacing:.1em;text-transform:uppercase}
+.drv .v{font-family:'Playfair Display',serif;font-size:26px;margin:6px 0 0}
+.drv .c{font-size:13px;font-weight:600}
+.drv svg{width:100%;height:44px;display:block;margin-top:8px}
+.drv p{margin:8px 0 0;font-size:13px;color:var(--gray)}
+.note{color:var(--gray);font-size:12px;margin-top:40px;border-top:1px solid var(--line);padding-top:14px;max-width:860px}
+.err{background:#FBF4EC;border:1px solid var(--copper);padding:14px 16px;font-size:14px;margin:0 0 20px}
+.hide{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+<p class="kicker">Metals Desk</p>
+<h1>Gold and Silver ETFs, Explained Before You Trade</h1>
+<p class="stand">Where GOLDBEES and SILVERBEES stand today, what is pushing them, and whether conditions lean towards buying or selling. One page, no jargon.</p>
+<p class="stamp" id="stamp">Loading prices...</p>
+<div class="err hide" id="err"></div>
+
+<div class="grid" id="cards"></div>
+
+<section class="sec">
+<p class="kicker">Conditions check</p>
+<h2>Does today favour a buyer or a seller?</h2>
+<p class="sub">Three things decide what you pay for a gold or silver ETF in India: the metal's price, the rupee, and whether the fund trades above or below the metal it holds. The dial moves only when they line up. It is a conditions check, not a forecast.</p>
+<div class="dialwrap" id="dials"></div>
+</section>
+
+<section class="sec">
+<p class="kicker">Two years of price</p>
+<h2>Where price sits against its own history</h2>
+<p class="sub">The grey line is the 200-day average, the simplest test of whether a market is in an uptrend or a downtrend. Dashed lines are the watch levels. A level matters most when a month closes on the other side of it.</p>
+<div class="grid" id="charts"></div>
+</section>
+
+<section class="sec">
+<p class="kicker">What is moving them</p>
+<h2>The forces behind the price</h2>
+<div class="drivers" id="drivers"></div>
+</section>
+
+<p class="note" id="note">Prices from Yahoo Finance (NSE, COMEX futures, interbank USDINR), delayed up to 15 minutes. Fund values from AMFI's daily NAV file, published after each trading day. The watch levels are chart support levels chosen by the desk and can be changed in one place in the page code. Nothing here is investment advice. Metals can fall further than any level suggests; size positions so a further 30% drop would not matter to you.</p>
+</div>
+
+<script>
+// ---------- configuration: edit here ----------
+const ETFS = {
+  gb: { name: 'Gold ETF', sym: 'GOLDBEES', metal: 'gold', levels: [117, 109, 104, 98, 95, 86], buyBelow: 95, sellAbove: 117,
+        explain: 'One unit holds about 0.01 gram of gold.' },
+  sb: { name: 'Silver ETF', sym: 'SILVERBEES', metal: 'silver', levels: [184, 169, 159, 139, 135, 100], buyBelow: 139, sellAbove: 184,
+        explain: 'One unit holds about 1 gram of silver.' },
+};
+const API = '/api/quotes';
+// -----------------------------------------------
+
+const $ = s => document.querySelector(s);
+const fmt = (n, d = 2) => n == null ? '-' : n.toLocaleString('en-IN', { minimumFractionDigits: d, maximumFractionDigits: d });
+const pct = n => n == null ? '-' : (n > 0 ? '+' : '') + n.toFixed(2) + '%';
+const cls = n => n > 0.05 ? 'up' : n < -0.05 ? 'down' : 'flat';
+const dmy = t => { const d = new Date(t); return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`; };
+const last = s => s[s.length - 1][1];
+const at = (s, daysAgo) => { const cut = Date.now() - daysAgo * 864e5; let v = s[0][1]; for (const [t, c] of s) { if (t <= cut) v = c; else break; } return v; };
+const ret = (s, days, live) => (live / at(s, days) - 1) * 100;
+const avg = (s, n) => { const k = s.slice(-n); return k.reduce((a, b) => a + b[1], 0) / k.length; };
+const hiLo = (s, days) => { const cut = Date.now() - days * 864e5; let hi = -1e9, lo = 1e9; for (const [t, c] of s) if (t >= cut) { hi = Math.max(hi, c); lo = Math.min(lo, c); } return { hi, lo }; };
+
+function spark(series, w = 200, h = 44, color = '#1A3C5B') {
+  const ys = series.map(p => p[1]); const lo = Math.min(...ys), hi = Math.max(...ys);
+  const pts = series.map((p, i) => `${(i / (series.length - 1) * w).toFixed(1)},${(h - 2 - (p[1] - lo) / (hi - lo || 1) * (h - 4)).toFixed(1)}`).join(' ');
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.6"/></svg>`;
+}
+
+function lineChart(series, levels, ma) {
+  const W = 640, H = 300, L = 44, R = 10, T = 12, B = 28;
+  const ys = series.map(p => p[1]).concat(levels, ma.filter(v => v));
+  const lo = Math.min(...ys) * 0.97, hi = Math.max(...ys) * 1.03;
+  const x = i => L + i / (series.length - 1) * (W - L - R), y = v => T + (1 - (v - lo) / (hi - lo)) * (H - T - B);
+  const path = series.map((p, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(p[1]).toFixed(1)}`).join('');
+  const maPath = ma.map((v, i) => v ? `${(ma[i-1] ? 'L' : 'M')}${x(i).toFixed(1)},${y(v).toFixed(1)}` : '').join('');
+  const lv = levels.filter(v => v > lo && v < hi).map(v => `<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="#C0946D" stroke-dasharray="4 4" stroke-width="1"/><text x="${W-R}" y="${y(v)-3}" text-anchor="end" font-size="10" fill="#C0946D" font-family="JetBrains Mono">${v}</text>`).join('');
+  const ticks = [0, .25, .5, .75, 1].map(f => { const v = lo + f * (hi - lo); return `<text x="${L-6}" y="${y(v)+3}" text-anchor="end" font-size="10" fill="#6B7280" font-family="JetBrains Mono">${v.toFixed(0)}</text><line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="#F1F0EC"/>`; }).join('');
+  const xl = [0, Math.floor(series.length / 2), series.length - 1].map(i => `<text x="${x(i)}" y="${H-8}" text-anchor="${i===0?'start':i===series.length-1?'end':'middle'}" font-size="10" fill="#6B7280" font-family="JetBrains Mono">${dmy(series[i][0]).slice(3)}</text>`).join('');
+  return `<svg viewBox="0 0 ${W} ${H}">${ticks}${lv}<path d="${maPath}" fill="none" stroke="#9CA3AF" stroke-width="1.4"/><path d="${path}" fill="none" stroke="#0A0A0A" stroke-width="1.8"/>${xl}</svg>`;
+}
+
+function dial(score) { // -3..+3
+  const a = -90 + (score + 3) / 6 * 180;
+  const rad = a * Math.PI / 180, cx = 170, cy = 150, r = 105;
+  const nx = cx + r * Math.sin(rad), ny = cy - r * Math.cos(rad);
+  const arc = (from, to, col) => { const f = (from - 90) * Math.PI / 180, t = (to - 90) * Math.PI / 180; return `<path d="M${cx + 125*Math.cos(f)},${cy + 125*Math.sin(f)} A125,125 0 0 1 ${cx + 125*Math.cos(t)},${cy + 125*Math.sin(t)}" fill="none" stroke="${col}" stroke-width="18" stroke-linecap="butt"/>`; };
+  return `<svg viewBox="0 0 340 170">${arc(-90,-54,'#A33A2F')}${arc(-54,-18,'#D9A79A')}${arc(-18,18,'#E5E3DD')}${arc(18,54,'#9FC4B1')}${arc(54,90,'#2F6B4F')}
+  <text x="40" y="166" font-size="11" fill="#A33A2F" font-family="JetBrains Mono">SELL</text><text x="300" y="166" text-anchor="end" font-size="11" fill="#2F6B4F" font-family="JetBrains Mono">BUY</text>
+  <line x1="${cx}" y1="${cy}" x2="${nx.toFixed(1)}" y2="${ny.toFixed(1)}" stroke="#0A0A0A" stroke-width="3" stroke-linecap="round"/><circle cx="${cx}" cy="${cy}" r="7" fill="#0A0A0A"/></svg>`;
+}
+
+function zoneOf(px, e) {
+  if (px <= e.buyBelow) return { k: 'buy', word: 'In the buying zone', s: 1 };
+  if (px >= e.sellAbove) return { k: 'sell', word: 'Stretched, near the top of its range', s: -1 };
+  const below = e.levels.filter(l => l < px); const next = below.length ? Math.max(...below) : null;
+  return { k: 'mid', word: next ? `Holding above ${next}` : 'Between levels', s: 0 };
+}
+
+function render(d) {
+  const errs = d.errors || [];
+  if (errs.length) { $('#err').textContent = 'Some data did not load: ' + errs.join('; ') + '. Figures shown are from the sources that did.'; $('#err').classList.remove('hide'); }
+  const t = Math.max(d.gb?.time || 0, d.sb?.time || 0);
+  $('#stamp').textContent = `NSE prices as of ${dmy(t)} ${new Date(t).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})} IST, delayed up to 15 minutes.`;
+
+  const fx = d.fx, gold = d.gold, silver = d.silver;
+  const fxTrend = fx ? (last(fx.series) / avg(fx.series, 60) - 1) * 100 : null; // + means rupee weakening
+  const ratio = gold && silver ? gold.price / silver.price : null;
+
+  let cards = '', dials = '', charts = '';
+  for (const k of ['gb', 'sb']) {
+    const e = ETFS[k], q = d[k]; if (!q) continue;
+    const px = q.price, chg = (px / q.prevClose - 1) * 100, s = q.series;
+    const yr = hiLo(s, 365), pos = (px - yr.lo) / (yr.hi - yr.lo) * 100;
+    const ma200 = avg(s, 200), vsMa = (px / ma200 - 1) * 100;
+    const z = zoneOf(px, e);
+    const nav = d.nav?.[k]; let prem = null;
+    if (nav) { const navDay = s.find(p => dmy(p[0]) === nav.date.replace(/-/g,'/').split('/').map((v,i)=>i===1?({Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'}[v]||v):v).join('/')); prem = ((navDay ? navDay[1] : px) / nav.nav - 1) * 100; }
+    const perGram = k === 'gb' ? px * 100 : px;
+
+    // plain-English sentence
+    const say = `${e.sym} is ${((1 - px / yr.hi) * 100).toFixed(0)}% below its one-year high and ${vsMa >= 0 ? 'above' : 'below'} its 200-day average by ${Math.abs(vsMa).toFixed(0)}%. ` +
+      (prem == null ? 'Fund value is not available today.' : Math.abs(prem) > 3 ? `Price and official fund value differ by ${prem.toFixed(1)}%, which usually means one of the two is stale. Treat the fund value check as unavailable today.` : prem > 0.5 ? `You would pay ${prem.toFixed(1)}% more than the ${e.metal} it holds is worth.` : prem < -0.5 ? `It trades ${Math.abs(prem).toFixed(1)}% below the ${e.metal} it holds, a small discount.` : `It trades at about the value of the ${e.metal} it holds.`);
+
+    cards += `<div class="card"><span class="sym">${e.sym} · NSE</span><h3 class="name">${e.name}</h3>
+      <div class="price">₹${fmt(px)}</div><div class="chg ${cls(chg)}">${chg>=0?'▲':'▼'} ${pct(chg)} today</div>
+      <div class="meta">About ₹${fmt(perGram,0)} per gram of ${e.metal}. ${e.explain}</div>
+      <span class="badge b-${z.k}">${z.word}</span>
+      <div class="range"><div class="bar"><i style="left:${pos.toFixed(1)}%"></i></div><div class="lab"><span>1-year low ₹${fmt(yr.lo)}</span><span>${pos.toFixed(0)}% up the range</span><span>1-year high ₹${fmt(yr.hi)}</span></div></div>
+      <p class="say">${say}</p>
+      <div class="rets">${[['1W',7],['1M',30],['3M',91],['6M',182],['1Y',365],['2Y',730]].map(([l,n])=>{const r=ret(s,n,px);return `<div><b>${l}</b><span class="${cls(r)}">${pct(r)}</span></div>`;}).join('')}</div></div>`;
+
+    // conditions
+    const c1 = { s: z.s, b: `Metal price: ${z.word.toLowerCase()}`, t: z.s > 0 ? `Below ${e.buyBelow}, the level the desk marks as the start of buying territory.` : z.s < 0 ? `Above ${e.sellAbove}. Buyers here are paying for a move that has already happened.` : `Between the watch levels. Nothing to act on from price alone.` };
+    const c2 = fxTrend == null ? { s: 0, b: 'Rupee: no data', t: '' } : fxTrend < -0.5 ? { s: 1, b: 'Rupee: strengthening', t: `USDINR is ${Math.abs(fxTrend).toFixed(1)}% under its 3-month average. A stronger rupee makes the same gram of ${e.metal} cheaper for an Indian buyer.` } : fxTrend > 0.5 ? { s: -1, b: 'Rupee: weakening', t: `USDINR is ${fxTrend.toFixed(1)}% over its 3-month average. A weak rupee lifts ETF prices even when the metal is flat, which flatters holders and taxes new buyers.` } : { s: 0, b: 'Rupee: steady', t: 'Within half a percent of its 3-month average. Neutral.' };
+    const c3 = (prem == null || Math.abs(prem) > 3) ? { s: 0, b: 'Fund price vs metal value: no data', t: '' } : prem < -0.5 ? { s: 1, b: `Fund trades ${Math.abs(prem).toFixed(1)}% below its metal`, t: 'You are being paid a small discount to enter.' } : prem > 1 ? { s: -1, b: `Fund trades ${prem.toFixed(1)}% above its metal`, t: 'Buyers are paying more than the metal is worth. Premiums this size appear when a crowd rushes in.' } : { s: 0, b: 'Fund trades at about its metal value', t: `${prem >= 0 ? '+' : ''}${prem.toFixed(1)}% against the official fund value. Fair.` };
+    const score = c1.s + c2.s + c3.s;
+    const word = ['Conditions favour selling','Leaning sell','Mixed, no edge','Leaning buy','Conditions favour buying'][Math.max(0,Math.min(4,score+2))];
+    const colr = v => v > 0 ? '#2F6B4F' : v < 0 ? '#A33A2F' : '#D1D5DB';
+    dials += `<div class="card dial"><span class="sym">${e.sym}</span>${dial(score)}<div class="word">${word}</div>
+      <ul class="why">${[c1,c2,c3].map(c=>`<li><span class="dot" style="background:${colr(c.s)}"></span><div><b>${c.b}</b><span>${c.t}</span></div></li>`).join('')}</ul></div>`;
+
+    // chart
+    const ma = s.map((_, i) => i >= 199 ? s.slice(i - 199, i + 1).reduce((a, b) => a + b[1], 0) / 200 : null);
+    charts += `<div class="card chart"><span class="sym">${e.sym} · daily close · 2 years</span>${lineChart(s, e.levels, ma)}<div class="legend"><span><i style="border-color:#0A0A0A"></i>Price</span><span><i style="border-color:#9CA3AF"></i>200-day average</span><span><i style="border-color:#C0946D;border-top-style:dashed"></i>Watch levels</span></div></div>`;
+  }
+  $('#cards').innerHTML = cards; $('#dials').innerHTML = dials; $('#charts').innerHTML = charts;
+
+  // drivers
+  const drv = [];
+  if (gold) drv.push({ k: 'Gold, US$ per ounce', v: '$' + fmt(gold.price, 0), c: ret(gold.series, 30, gold.price), s: gold.series, p: 'Gold moves most on US interest rates and the dollar. Rising real rates pull it down.' });
+  if (silver) drv.push({ k: 'Silver, US$ per ounce', v: '$' + fmt(silver.price, 2), c: ret(silver.series, 30, silver.price), s: silver.series, p: 'Silver swings about twice as hard as gold in both directions. Expect bigger moves.' });
+  if (fx) drv.push({ k: 'Rupees per US dollar', v: fmt(fx.price, 2), c: ret(fx.series, 30, fx.price), s: fx.series, p: 'A rising number means a weaker rupee, which lifts Indian ETF prices on its own.' });
+  if (ratio) { const rs = gold.series.map((p, i) => [p[0], silver.series[i] ? p[1] / silver.series[i][1] : null]).filter(p => p[1]); drv.push({ k: 'Gold to silver ratio', v: ratio.toFixed(0), c: null, s: rs, p: ratio >= 80 ? 'Above 80: silver is historically cheap against gold.' : ratio <= 50 ? 'Below 50: silver is historically expensive against gold.' : 'Inside its normal range of about 50 to 80.' }); }
+  $('#drivers').innerHTML = drv.map(x => `<div class="drv"><div class="k">${x.k}</div><div class="v">${x.v}</div>${x.c == null ? '' : `<div class="c ${cls(x.c)}">${pct(x.c)} in a month</div>`}${spark(x.s)}<p>${x.p}</p></div>`).join('');
+}
+
+fetch(API).then(r => { if (!r.ok) throw new Error('API ' + r.status); return r.json(); }).then(render).catch(e => {
+  $('#stamp').textContent = 'Live data not available.';
+  $('#err').innerHTML = `Could not reach the price service (${e.message}). This page needs to run on Vercel with the api/quotes.js function deployed alongside it. Opening the file directly on your computer will show this message.`; $('#err').classList.remove('hide');
+});
+</script>
+</body>
+</html>
