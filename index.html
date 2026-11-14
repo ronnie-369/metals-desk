@@ -171,7 +171,6 @@ function render(d) {
     const z = zoneOf(px, e);
     const nav = d.nav?.[k]; let prem = null;
     if (nav) { const navDay = s.find(p => dmy(p[0]) === nav.date.replace(/-/g,'/').split('/').map((v,i)=>i===1?({Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'}[v]||v):v).join('/')); prem = ((navDay ? navDay[1] : px) / nav.nav - 1) * 100; }
-    const perGram = k === 'gb' ? px * 100 : px;
 
     // plain-English sentence
     const say = `${e.sym} is ${((1 - px / yr.hi) * 100).toFixed(0)}% below its one-year high and ${vsMa >= 0 ? 'above' : 'below'} its 200-day average by ${Math.abs(vsMa).toFixed(0)}%. ` +
@@ -179,7 +178,7 @@ function render(d) {
 
     cards += `<div class="card"><span class="sym">${e.sym} · NSE</span><h3 class="name">${e.name}</h3>
       <div class="price">₹${fmt(px)}</div><div class="chg ${cls(chg)}">${chg>=0?'▲':'▼'} ${pct(chg)} today</div>
-      <div class="meta">About ₹${fmt(perGram,0)} per gram of ${e.metal}. ${e.explain}</div>
+      <div class="meta">${e.explain}</div>
       <span class="badge b-${z.k}">${z.word}</span>
       <div class="range"><div class="bar"><i style="left:${pos.toFixed(1)}%"></i></div><div class="lab"><span>1-year low ₹${fmt(yr.lo)}</span><span>${pos.toFixed(0)}% up the range</span><span>1-year high ₹${fmt(yr.hi)}</span></div></div>
       <p class="say">${say}</p>
