@@ -7,6 +7,7 @@ const SYMBOLS = {
   gold:   ['GC=F',          '1y'],
   silver: ['SI=F',          '1y'],
   fx:     ['INR=X',         '1y'],
+  cny:    ['CNY=X',         '1y'],
 };
 const UA = { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; MetalsDesk/1.0)' } };
 
@@ -49,18 +50,52 @@ async function amfi() {
   return out;
 }
 
+// FRED daily series as [ms, value] pairs. Blank observations are skipped.
+async function fred(id, days) {
+  const start = new Date(Date.now() - days * 864e5).toISOString().slice(0, 10);
+  const r = await fetch(`https://fred.stlouisfed.org/graph/fredgraph.csv?id=${id}&cosd=${start}`, UA);
+  if (!r.ok) throw new Error(`FRED ${id} ${r.status}`);
+  const out = [];
+  for (const line of (await r.text()).split('\n').slice(1)) {
+    const [d, v] = line.trim().split(',');
+    if (d && v && v !== '.') out.push([Date.parse(d + 'T00:00:00Z'), +v]);
+  }
+  return out;
+}
+
+// Shanghai Gold Exchange benchmark (SHAU). The last PM round of each day is the PM benchmark, CNY per gram.
+async function sge(days) {
+  const d = n => new Date(Date.now() - n * 864e5).toISOString().slice(0, 10);
+  const url = `https://www.sge.com.cn/sjzx/shanghaiAuAuto?start_date=${d(days)}&end_date=${d(0)}`;
+  const r = await fetch(url, UA);
+  if (!r.ok) throw new Error(`SGE ${r.status}`);
+  const html = await r.text();
+  const byDay = {};
+  for (const row of html.match(/<tr[\s\S]*?<\/tr>/g) || []) {
+    const cells = [...row.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/g)].map(m => m[1].replace(/<[^>]+>/g, '').trim());
+    if (cells.length < 6 || cells[2] !== 'SHAU' || cells[3] !== '午盘') continue;
+    const date = cells[1], round = +cells[4], price = +cells[5];
+    if (!isFinite(price)) continue;
+    if (!byDay[date] || round > byDay[date].round) byDay[date] = { round, price };
+  }
+  return Object.keys(byDay).sort().map(k => [Date.parse(k + 'T00:00:00Z'), byDay[k].price]);
+}
+
 export default async function handler(req, res) {
   const keys = Object.keys(SYMBOLS);
   const jobs = keys.map(k => yahoo(...SYMBOLS[k]));
-  jobs.push(amfi());
+  jobs.push(amfi(), fred('DFII10', 400), fred('DGS10', 400), sge(120));
   const settled = await Promise.allSettled(jobs);
   const data = { fetched: Date.now(), errors: [] };
   keys.forEach((k, i) => {
     if (settled[i].status === 'fulfilled') data[k] = settled[i].value;
     else data.errors.push(`${k}: ${settled[i].reason.message}`);
   });
-  const nav = settled[keys.length];
-  if (nav.status === 'fulfilled') data.nav = nav.value; else data.errors.push(`nav: ${nav.reason.message}`);
+  const extra = ['nav', 'realYield', 'nomYield', 'sge'];
+  extra.forEach((k, i) => {
+    const r = settled[keys.length + i];
+    if (r.status === 'fulfilled') data[k] = r.value; else data.errors.push(`${k}: ${r.reason.message}`);
+  });
   res.setHeader('Cache-Control', 's-maxage=900, stale-while-revalidate=3600');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.status(200).json(data);

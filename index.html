@@ -56,6 +56,8 @@ h2{font-family:'Playfair Display',serif;font-weight:500;font-size:24px;margin:0 
 .drv .c{font-size:13px;font-weight:600}
 .drv svg{width:100%;height:44px;display:block;margin-top:8px}
 .drv p{margin:8px 0 0;font-size:13px;color:var(--gray)}
+.tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:0 0 14px}
+@media(min-width:860px){.tiles{grid-template-columns:repeat(4,1fr)}}
 .note{color:var(--gray);font-size:12px;margin-top:40px;border-top:1px solid var(--line);padding-top:14px;max-width:860px}
 .err{background:#FBF4EC;border:1px solid var(--copper);padding:14px 16px;font-size:14px;margin:0 0 20px}
 .hide{display:none}
@@ -86,12 +88,28 @@ h2{font-family:'Playfair Display',serif;font-weight:500;font-size:24px;margin:0 
 </section>
 
 <section class="sec">
+<p class="kicker">Gold and US interest rates</p>
+<h2>Why gold falls when America pays more to borrow</h2>
+<p class="sub">Gold earns nothing. When the real return on a US Treasury bond rises, holding gold costs you that return, so money leaves gold. The copper line is the 10-year real yield; when it climbs, the black line tends to fall. The grey dashed line is the ordinary 10-year yield before inflation.</p>
+<div class="tiles" id="ratetiles"></div>
+<div class="card chart" id="ratechart"></div>
+</section>
+
+<section class="sec">
+<p class="kicker">What China pays</p>
+<h2>Is Shanghai paying more for gold than London?</h2>
+<p class="sub">China is the largest physical buyer. The Shanghai Gold Exchange sets a benchmark twice a day in yuan per gram. When Shanghai pays more than the London price converted to yuan, Chinese demand is pulling metal east and supports the world price. A discount means Chinese buyers have stepped back.</p>
+<div class="tiles" id="cntiles"></div>
+<div class="card chart" id="cnchart"></div>
+</section>
+
+<section class="sec">
 <p class="kicker">What is moving them</p>
 <h2>The forces behind the price</h2>
 <div class="drivers" id="drivers"></div>
 </section>
 
-<p class="note" id="note">Prices from Yahoo Finance (NSE, COMEX futures, interbank USDINR), delayed up to 15 minutes. Fund values from AMFI's daily NAV file, published after each trading day. The watch levels are chart support levels chosen by the desk and can be changed in one place in the page code. Nothing here is investment advice. Metals can fall further than any level suggests; size positions so a further 30% drop would not matter to you.</p>
+<p class="note" id="note">Prices from Yahoo Finance (NSE, COMEX futures, interbank USDINR), delayed up to 15 minutes. Fund values from AMFI's daily NAV file, published after each trading day. US yields from the Federal Reserve Bank of St Louis (FRED series DFII10 and DGS10). Shanghai benchmark from the Shanghai Gold Exchange (SHAU, final afternoon round), compared with the London price converted at Yahoo's USDCNY rate. The watch levels are chart support levels chosen by the desk and can be changed in one place in the page code. Nothing here is investment advice. Metals can fall further than any level suggests; size positions so a further 30% drop would not matter to you.</p>
 </div>
 
 <script>
@@ -133,6 +151,62 @@ function lineChart(series, levels, ma) {
   const ticks = [0, .25, .5, .75, 1].map(f => { const v = lo + f * (hi - lo); return `<text x="${L-6}" y="${y(v)+3}" text-anchor="end" font-size="10" fill="#6B7280" font-family="JetBrains Mono">${v.toFixed(0)}</text><line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="#F1F0EC"/>`; }).join('');
   const xl = [0, Math.floor(series.length / 2), series.length - 1].map(i => `<text x="${x(i)}" y="${H-8}" text-anchor="${i===0?'start':i===series.length-1?'end':'middle'}" font-size="10" fill="#6B7280" font-family="JetBrains Mono">${dmy(series[i][0]).slice(3)}</text>`).join('');
   return `<svg viewBox="0 0 ${W} ${H}">${ticks}${lv}<path d="${maPath}" fill="none" stroke="#9CA3AF" stroke-width="1.4"/><path d="${path}" fill="none" stroke="#0A0A0A" stroke-width="1.8"/>${xl}</svg>`;
+}
+
+function dualChart(a, b, c, opts) { // a: left-axis series, b and c: right-axis series (c optional, dashed)
+  const W = 640, H = 300, L = 48, R = 44, T = 12, B = 28;
+  const ax = s => { const ys = s.map(p => p[1]); return { lo: Math.min(...ys), hi: Math.max(...ys) }; };
+  const A = ax(a), Bx = ax(b.concat(c || []));
+  const pad = (r) => { const d = (r.hi - r.lo) || 1; return { lo: r.lo - d * .05, hi: r.hi + d * .05 }; };
+  const ra = pad(A), rb = pad(Bx);
+  const t0 = a[0][0], t1 = a[a.length - 1][0];
+  const x = t => L + (t - t0) / (t1 - t0) * (W - L - R);
+  const yA = v => T + (1 - (v - ra.lo) / (ra.hi - ra.lo)) * (H - T - B);
+  const yB = v => T + (1 - (v - rb.lo) / (rb.hi - rb.lo)) * (H - T - B);
+  const path = (s, y) => s.map((p, i) => `${i ? 'L' : 'M'}${x(p[0]).toFixed(1)},${y(p[1]).toFixed(1)}`).join('');
+  const ticks = [0, .5, 1].map(f => { const va = ra.lo + f * (ra.hi - ra.lo), vb = rb.lo + f * (rb.hi - rb.lo), yy = yA(va); return `<line x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}" stroke="#F1F0EC"/><text x="${L-6}" y="${yy+3}" text-anchor="end" font-size="10" fill="#6B7280" font-family="JetBrains Mono">${opts.fa(va)}</text><text x="${W-R+6}" y="${yy+3}" font-size="10" fill="#C0946D" font-family="JetBrains Mono">${opts.fb(vb)}</text>`; }).join('');
+  const xl = [t0, (t0 + t1) / 2, t1].map((tt, i) => `<text x="${x(tt)}" y="${H-8}" text-anchor="${i===0?'start':i===2?'end':'middle'}" font-size="10" fill="#6B7280" font-family="JetBrains Mono">${dmy(tt).slice(3)}</text>`).join('');
+  return `<svg viewBox="0 0 ${W} ${H}">${ticks}${c ? `<path d="${path(c, yB)}" fill="none" stroke="#9CA3AF" stroke-width="1.2" stroke-dasharray="4 3"/>` : ''}<path d="${path(b, yB)}" fill="none" stroke="#C0946D" stroke-width="1.8"/><path d="${path(a, yA)}" fill="none" stroke="#0A0A0A" stroke-width="1.8"/>${xl}</svg>`;
+}
+function tile(k, v, c, p) { return `<div class="drv"><div class="k">${k}</div><div class="v">${v}</div>${c ? `<div class="c ${cls(c.n)}">${c.t}</div>` : ''}${p ? `<p>${p}</p>` : ''}</div>`; }
+
+function renderRates(d) {
+  const g = d.gold, ry = d.realYield, ny = d.nomYield;
+  if (!g || !ry) { $('#ratechart').innerHTML = '<p class="sub" style="padding:16px">US yield data did not load today.</p>'; return; }
+  const cut = Date.now() - 365 * 864e5;
+  const gs = g.series.filter(p => p[0] >= cut), rs = ry.filter(p => p[0] >= cut), ns = (ny || []).filter(p => p[0] >= cut);
+  const rNow = last(rs), r1m = at(rs, 30), nNow = ns.length ? last(ns) : null;
+  const g1m = ret(g.series, 30, g.price);
+  const dir = rNow - r1m;
+  $('#ratetiles').innerHTML =
+    tile('Gold, US$ per ounce', '$' + fmt(g.price, 0), { n: g1m, t: pct(g1m) + ' in a month' }) +
+    tile('10-year real yield', rNow.toFixed(2) + '%', { n: -dir, t: (dir >= 0 ? '+' : '') + dir.toFixed(2) + ' pts in a month' }, 'What a US bond pays after inflation. Gold\'s main rival.') +
+    tile('10-year Treasury yield', nNow == null ? '-' : nNow.toFixed(2) + '%', null, 'Before inflation. Moves the dollar.') +
+    tile('Read', dir > 0.1 ? 'Headwind' : dir < -0.1 ? 'Tailwind' : 'Neutral', null, dir > 0.1 ? 'Real yields rising. Expect gold to struggle until they stop.' : dir < -0.1 ? 'Real yields falling. The main pressure on gold is easing.' : 'Real yields flat. Gold is trading on other things this month.');
+  $('#ratechart').innerHTML = `<span class="sym">Gold (left, black) against the 10-year real yield (right, copper) and nominal yield (grey dashed) · 1 year</span>` +
+    dualChart(gs, rs, ns.length ? ns : null, { fa: v => '$' + v.toFixed(0), fb: v => v.toFixed(1) + '%' }) +
+    `<div class="legend"><span><i style="border-color:#0A0A0A"></i>Gold US$/oz</span><span><i style="border-color:#C0946D"></i>10-year real yield</span><span><i style="border-color:#9CA3AF;border-top-style:dashed"></i>10-year yield</span></div>`;
+}
+
+function renderChina(d) {
+  const g = d.gold, cny = d.cny, sg = d.sge;
+  if (!g || !cny || !sg || !sg.length) { $('#cnchart').innerHTML = '<p class="sub" style="padding:16px">Shanghai benchmark did not load today. The exchange publishes on Chinese trading days only.</p>'; return; }
+  // London price in yuan per gram, matched by day
+  const cnyBy = {}; cny.series.forEach(p => cnyBy[new Date(p[0]).toDateString()] = p[1]);
+  const goldBy = {}; g.series.forEach(p => goldBy[new Date(p[0]).toDateString()] = p[1]);
+  const lon = sg.map(p => { const k = new Date(p[0]).toDateString(); const gv = goldBy[k], cv = cnyBy[k]; return gv && cv ? [p[0], gv * cv / 31.1035] : null; }).filter(Boolean);
+  const shNow = last(sg), lonNow = g.price * cny.price / 31.1035, prem = (shNow / lonNow - 1) * 100;
+  const premSeries = sg.map(p => { const k = new Date(p[0]).toDateString(); const gv = goldBy[k], cv = cnyBy[k]; return gv && cv ? (p[1] / (gv * cv / 31.1035) - 1) * 100 : null; }).filter(v => v != null);
+  const premAvg = premSeries.reduce((a, b) => a + b, 0) / premSeries.length;
+  $('#cntiles').innerHTML =
+    tile('Shanghai benchmark, PM', '¥' + fmt(shNow, 2), null, 'Yuan per gram, Shanghai Gold Exchange, ' + dmy(sg[sg.length - 1][0])) +
+    tile('London price in yuan', '¥' + fmt(lonNow, 2), null, 'World price converted at today\'s yuan rate') +
+    tile('Shanghai premium', (prem >= 0 ? '+' : '') + prem.toFixed(2) + '%', { n: prem, t: 'avg ' + (premAvg >= 0 ? '+' : '') + premAvg.toFixed(2) + '% over the period' }, prem > 1 ? 'China is paying up. Physical demand is strong.' : prem < -1 ? 'China is paying less than London. Chinese buyers have stepped back.' : 'Shanghai and London are in line.') +
+    tile('Yuan per dollar', fmt(cny.price, 3), { n: ret(cny.series, 30, cny.price), t: pct(ret(cny.series, 30, cny.price)) + ' in a month' }, 'A weaker yuan makes gold dearer in China, as it does in India.');
+  const lo = Math.min(...sg.map(p => p[1]), ...lon.map(p => p[1])), hi = Math.max(...sg.map(p => p[1]), ...lon.map(p => p[1]));
+  $('#cnchart').innerHTML = `<span class="sym">Shanghai benchmark (black) against London converted to yuan (grey) · yuan per gram</span>` +
+    dualChart(sg, lon, null, { fa: v => '¥' + v.toFixed(0), fb: v => '¥' + v.toFixed(0) }).replace('stroke="#C0946D" stroke-width="1.8"', 'stroke="#9CA3AF" stroke-width="1.6"') +
+    `<div class="legend"><span><i style="border-color:#0A0A0A"></i>Shanghai PM benchmark</span><span><i style="border-color:#9CA3AF"></i>London in yuan</span></div>`;
 }
 
 function dial(score) { // -3..+3
@@ -200,6 +274,7 @@ function render(d) {
   }
   $('#cards').innerHTML = cards; $('#dials').innerHTML = dials; $('#charts').innerHTML = charts;
 
+  renderRates(d); renderChina(d);
   // drivers
   const drv = [];
   if (gold) drv.push({ k: 'Gold, US$ per ounce', v: '$' + fmt(gold.price, 0), c: ret(gold.series, 30, gold.price), s: gold.series, p: 'Gold moves most on US interest rates and the dollar. Rising real rates pull it down.' });
