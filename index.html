@@ -10,7 +10,14 @@
 :root{--bg:#FBFBF9;--ink:#0A0A0A;--copper:#C0946D;--slate:#1A3C5B;--gray:#6B7280;--line:#E5E3DD;--white:#fff;--up:#2F6B4F;--down:#A33A2F;--amber:#B7791F}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-size:16px;line-height:1.5}
-.wrap{max-width:1100px;margin:0 auto;padding:28px 18px 70px}
+.wrap{max-width:1100px;margin:0 auto;padding:0 18px 70px}
+.mast{display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid var(--line);margin-bottom:28px}
+.mast .brand{font-family:'Playfair Display',serif;font-size:18px;text-decoration:none;color:var(--ink)}
+.mast .brand small{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--copper);margin-left:10px}
+.mast nav a{font-size:14px;color:var(--gray);text-decoration:none;margin-left:18px}.mast nav a.on{color:var(--ink);border-bottom:2px solid var(--copper)}
+.teaser{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;background:var(--white);border:1px solid var(--line);border-left:4px solid var(--copper);padding:18px 22px;margin-top:16px}
+.teaser b{font-family:'Playfair Display',serif;font-size:20px;font-weight:500}
+.teaser a{color:var(--ink);font-weight:600;font-size:14px}
 .kicker{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--copper);margin:0 0 8px}
 h1{font-family:'Playfair Display',serif;font-weight:600;font-size:clamp(26px,4vw,40px);line-height:1.1;margin:0 0 8px}
 .stand{color:var(--slate);font-size:17px;max-width:720px;margin:0 0 6px}
@@ -65,26 +72,26 @@ h2{font-family:'Playfair Display',serif;font-weight:500;font-size:24px;margin:0 
 </head>
 <body>
 <div class="wrap">
-<p class="kicker">Metals Desk</p>
-<h1>Gold and Silver ETFs, Explained Before You Trade</h1>
-<p class="stand">Where GOLDBEES and SILVERBEES stand today, what is pushing them, and whether conditions lean towards buying or selling. One page, no jargon.</p>
+<header class="mast"><a class="brand" href="/">Metals Desk<small>by Bombay Breed</small></a><nav><a class="on" href="/">Desk</a><a href="/coins">Coins</a></nav></header>
+<p class="kicker">The decision page</p>
+<h1>Is This a Week to Buy Gold or Silver in India?</h1>
+<p class="stand">One visit should settle two questions: whether conditions favour buying or selling right now, and whether to hold the metal as an ETF or as a coin. The dial answers the first. The Coins page answers the second.</p>
 <p class="stamp" id="stamp">Loading prices...</p>
 <div class="err hide" id="err"></div>
 
-<div class="grid" id="cards"></div>
-
-<section class="sec">
+<section>
 <p class="kicker">Conditions check</p>
 <h2>Does today favour a buyer or a seller?</h2>
 <p class="sub">Three things decide what you pay for a gold or silver ETF in India: the metal's price, the rupee, and whether the fund trades above or below the metal it holds. The dial moves only when they line up. It is a conditions check, not a forecast.</p>
 <div class="dialwrap" id="dials"></div>
+<div class="teaser" id="teaser"><div><span class="sym">Prefer a coin in hand?</span><br><b id="teaser-b">Checking today's cheapest 10g coin...</b></div><a href="/coins">See every seller ranked</a></div>
 </section>
 
 <section class="sec">
-<p class="kicker">Two years of price</p>
-<h2>Where price sits against its own history</h2>
-<p class="sub">The grey line is the 200-day average, the simplest test of whether a market is in an uptrend or a downtrend. Dashed lines are the watch levels. A level matters most when a month closes on the other side of it.</p>
-<div class="grid" id="charts"></div>
+<p class="kicker">The two ETFs</p>
+<h2>Where GOLDBEES and SILVERBEES stand today</h2>
+<p class="sub">Price, today's move, position in the one-year range, and returns. The badge reads price against the desk's watch levels.</p>
+<div class="grid" id="cards"></div>
 </section>
 
 <section class="sec">
@@ -101,6 +108,13 @@ h2{font-family:'Playfair Display',serif;font-weight:500;font-size:24px;margin:0 
 <p class="sub">China is the largest physical buyer. The Shanghai Gold Exchange sets a benchmark twice a day in yuan per gram. When Shanghai pays more than the London price converted to yuan, Chinese demand is pulling metal east and supports the world price. A discount means Chinese buyers have stepped back.</p>
 <div class="tiles" id="cntiles"></div>
 <div class="card chart" id="cnchart"></div>
+</section>
+
+<section class="sec">
+<p class="kicker">Two years of price</p>
+<h2>Where price sits against its own history</h2>
+<p class="sub">The grey line is the 200-day average, the simplest test of whether a market is in an uptrend or a downtrend. Dashed lines are the watch levels. A level matters most when a month closes on the other side of it.</p>
+<div class="grid" id="charts"></div>
 </section>
 
 <section class="sec">
@@ -284,6 +298,7 @@ function render(d) {
   $('#drivers').innerHTML = drv.map(x => `<div class="drv"><div class="k">${x.k}</div><div class="v">${x.v}</div>${x.c == null ? '' : `<div class="c ${cls(x.c)}">${pct(x.c)} in a month</div>`}${spark(x.s)}<p>${x.p}</p></div>`).join('');
 }
 
+fetch('/api/coins').then(r => r.json()).then(c => { const b = document.getElementById('teaser-b'); if (c.cheapest) b.textContent = `${c.cheapest.name} at ₹${c.cheapest.price.toLocaleString('en-IN')} for 10g, ${c.cheapest.premium != null ? c.cheapest.premium.toFixed(1) + '% over the metal' : 'GST included'}.`; else b.textContent = 'No seller could be read today. See the list.'; }).catch(() => { document.getElementById('teaser-b').textContent = 'Compare 10g coin prices across Indian sellers.'; });
 fetch(API).then(r => { if (!r.ok) throw new Error('API ' + r.status); return r.json(); }).then(render).catch(e => {
   $('#stamp').textContent = 'Live data not available.';
   $('#err').innerHTML = `Could not reach the price service (${e.message}). This page needs to run on Vercel with the api/quotes.js function deployed alongside it. Opening the file directly on your computer will show this message.`; $('#err').classList.remove('hide');
