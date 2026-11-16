@@ -64,19 +64,23 @@ async function fred(id, days) {
 }
 
 // Shanghai Gold Exchange benchmark (SHAU). The last PM round of each day is the PM benchmark, CNY per gram.
+// The page returns at most 20 rows (about three trading days) per request, so we fetch short windows in parallel.
 async function sge(days) {
   const d = n => new Date(Date.now() - n * 864e5).toISOString().slice(0, 10);
-  const url = `https://www.sge.com.cn/sjzx/shanghaiAuAuto?start_date=${d(days)}&end_date=${d(0)}`;
-  const r = await fetch(url, UA);
-  if (!r.ok) throw new Error(`SGE ${r.status}`);
-  const html = await r.text();
+  const windows = [];
+  for (let from = days; from > 0; from -= 4) windows.push([from, Math.max(from - 3, 0)]);
+  const pages = await Promise.allSettled(windows.map(([a, b]) =>
+    fetch(`https://www.sge.com.cn/sjzx/shanghaiAuAuto?start_date=${d(a)}&end_date=${d(b)}`, UA).then(r => r.ok ? r.text() : '')));
   const byDay = {};
-  for (const row of html.match(/<tr[\s\S]*?<\/tr>/g) || []) {
-    const cells = [...row.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/g)].map(m => m[1].replace(/<[^>]+>/g, '').trim());
-    if (cells.length < 6 || cells[2] !== 'SHAU' || cells[3] !== '午盘') continue;
-    const date = cells[1], round = +cells[4], price = +cells[5];
-    if (!isFinite(price)) continue;
-    if (!byDay[date] || round > byDay[date].round) byDay[date] = { round, price };
+  for (const pg of pages) {
+    if (pg.status !== 'fulfilled') continue;
+    for (const row of pg.value.match(/<tr[\s\S]*?<\/tr>/g) || []) {
+      const cells = [...row.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/g)].map(m => m[1].replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').trim());
+      if (cells.length < 6 || cells[2] !== 'SHAU' || cells[3] !== '午盘') continue;
+      const date = cells[1], round = +cells[4], price = +cells[5];
+      if (!isFinite(price)) continue;
+      if (!byDay[date] || round > byDay[date].round) byDay[date] = { round, price };
+    }
   }
   return Object.keys(byDay).sort().map(k => [Date.parse(k + 'T00:00:00Z'), byDay[k].price]);
 }
@@ -84,7 +88,7 @@ async function sge(days) {
 export default async function handler(req, res) {
   const keys = Object.keys(SYMBOLS);
   const jobs = keys.map(k => yahoo(...SYMBOLS[k]));
-  jobs.push(amfi(), fred('DFII10', 400), fred('DGS10', 400), sge(120));
+  jobs.push(amfi(), fred('DFII10', 400), fred('DGS10', 400), sge(40));
   const settled = await Promise.allSettled(jobs);
   const data = { fetched: Date.now(), errors: [] };
   keys.forEach((k, i) => {

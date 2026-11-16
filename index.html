@@ -65,6 +65,20 @@ h2{font-family:'Playfair Display',serif;font-weight:500;font-size:24px;margin:0 
 .drv p{margin:8px 0 0;font-size:13px;color:var(--gray)}
 .tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:0 0 14px}
 @media(min-width:860px){.tiles{grid-template-columns:repeat(4,1fr)}}
+.brief{display:grid;grid-template-columns:1fr;gap:12px}
+@media(min-width:860px){.brief{grid-template-columns:repeat(4,1fr)}}
+.b{background:var(--white);border:1px solid var(--line);padding:16px 18px}
+.b .k{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--gray);letter-spacing:.1em;text-transform:uppercase}
+.b .v{font-family:'Playfair Display',serif;font-size:28px;margin:6px 0 2px;line-height:1.1}
+.b .d{font-size:14px;font-weight:600}
+.b p{margin:8px 0 0;font-size:13px;color:var(--gray);line-height:1.45}
+.watch{list-style:none;padding:0;margin:14px 0 0;background:var(--white);border:1px solid var(--line);border-left:4px solid var(--copper)}
+.watch li{padding:10px 18px;border-bottom:1px solid var(--line);font-size:15px}.watch li:last-child{border-bottom:0}
+.log{overflow-x:auto}
+.log table{min-width:760px}
+.log td,.log th{padding:8px 10px;font-size:13px;white-space:nowrap}
+.log td.n{font-family:'JetBrains Mono',monospace;text-align:right}.log th.n{text-align:right}
+.log tr.today td{background:#FBF4EC}
 .note{color:var(--gray);font-size:12px;margin-top:40px;border-top:1px solid var(--line);padding-top:14px;max-width:860px}
 .err{background:#FBF4EC;border:1px solid var(--copper);padding:14px 16px;font-size:14px;margin:0 0 20px}
 .hide{display:none}
@@ -74,17 +88,32 @@ h2{font-family:'Playfair Display',serif;font-weight:500;font-size:24px;margin:0 
 <div class="wrap">
 <header class="mast"><a class="brand" href="/">Metals Desk<small>by Bombay Breed</small></a><nav><a class="on" href="/">Desk</a><a href="/coins">Coins</a></nav></header>
 <p class="kicker">The decision page</p>
-<h1>Is This a Week to Buy Gold or Silver in India?</h1>
-<p class="stand">One visit should settle two questions: whether conditions favour buying or selling right now, and whether to hold the metal as an ETF or as a coin. The dial answers the first. The Coins page answers the second.</p>
+<h1>Is Today a Day to Buy Gold or Silver in India?</h1>
+<p class="stand">Open it once a day. The brief says what moved since yesterday and what to watch; the dial says whether conditions favour a buyer or a seller; the Coins page says where the same 10 grams is cheapest today.</p>
 <p class="stamp" id="stamp">Loading prices...</p>
 <div class="err hide" id="err"></div>
 
 <section>
+<p class="kicker">Today's brief</p>
+<h2 id="brief-h">What moved since yesterday</h2>
+<p class="sub" id="brief-sub">Loading the day's changes...</p>
+<div class="brief" id="brief"></div>
+<ul class="watch" id="watch"></ul>
+</section>
+
+<section class="sec">
 <p class="kicker">Conditions check</p>
 <h2>Does today favour a buyer or a seller?</h2>
 <p class="sub">Three things decide what you pay for a gold or silver ETF in India: the metal's price, the rupee, and whether the fund trades above or below the metal it holds. The dial moves only when they line up. It is a conditions check, not a forecast.</p>
 <div class="dialwrap" id="dials"></div>
 <div class="teaser" id="teaser"><div><span class="sym">Prefer a coin in hand?</span><br><b id="teaser-b">Checking today's cheapest 10g coin...</b></div><a href="/coins">See every seller ranked</a></div>
+</section>
+
+<section class="sec">
+<p class="kicker">The log</p>
+<h2>The last twenty trading days, one line each</h2>
+<p class="sub">The desk writes one row every trading day after the close. Today's row is highlighted. Coin prices begin from the day the log started; the rest is backfilled from the price series.</p>
+<div class="log"><table id="log"><thead><tr><th>Date</th><th class="n">GOLDBEES</th><th class="n">SILVERBEES</th><th class="n">Gold $</th><th class="n">Silver $</th><th class="n">USDINR</th><th class="n">Real yield</th><th class="n">Shanghai</th><th>Cheapest coin</th><th class="n">Coin premium</th></tr></thead><tbody></tbody></table></div>
 </section>
 
 <section class="sec">
@@ -224,6 +253,46 @@ function renderChina(d) {
     `<div class="legend"><span><i style="border-color:#0A0A0A"></i>Shanghai PM benchmark</span><span><i style="border-color:#9CA3AF"></i>London in yuan</span></div>`;
 }
 
+function renderBrief(d, H, C) {
+  const hist = (H && H.history) || [];
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+  const prev = hist.filter(h => h.day < today).slice(-1)[0] || null;
+  const prev5 = hist.filter(h => h.day < today).slice(-5);
+  const chg = (a, b) => (a != null && b != null) ? (a / b - 1) * 100 : null;
+  const sgn = v => v == null ? '' : (v > 0 ? '+' : '') + v.toFixed(2);
+  const daysIn = (k, e, px) => { const z = zoneOf(px, e).word; let n = 1; for (let i = hist.length - 1; i >= 0; i--) { const v = hist[i][k]; if (hist[i].day >= today) continue; if (v && zoneOf(v, e).word === z) n++; else break; } return n; };
+  const near = (px, e) => { const below = e.levels.filter(l => l < px), above = e.levels.filter(l => l > px); const b = below.length ? Math.max(...below) : null, a = above.length ? Math.min(...above) : null; return { b, a, pb: b ? (px / b - 1) * 100 : null, pa: a ? (a / px - 1) * 100 : null }; };
+  const tiles = [], watch = [];
+  for (const k of ['gb', 'sb']) {
+    const e = ETFS[k], q = d[k]; if (!q) continue;
+    const px = q.price, z = zoneOf(px, e), n = near(px, e), dIn = daysIn(k, e, px), dayChg = chg(px, q.prevClose);
+    tiles.push(`<div class="b"><div class="k">${e.sym}</div><div class="v">₹${fmt(px)}</div><div class="d ${cls(dayChg)}">${sgn(dayChg)}% on the day</div><p>${z.word}, day ${dIn} in this zone.${n.b ? ' ' + n.pb.toFixed(1) + '% above ' + n.b + '.' : ''}${n.a ? ' ' + n.pa.toFixed(1) + '% below ' + n.a + '.' : ''}</p></div>`);
+    if (n.b && n.pb < 2.5) watch.push(`<li><b>${e.sym}</b> sits ${n.pb.toFixed(1)}% above ${n.b}. A close under it changes the zone. Monthly close is what confirms it.</li>`);
+    if (n.a && n.pa < 2.5) watch.push(`<li><b>${e.sym}</b> is ${n.pa.toFixed(1)}% under ${n.a}. A close above it moves the badge up a zone.</li>`);
+  }
+  // coin
+  const cheap = C && C.cheapest, prevCoin = prev && prev.cheapest;
+  const prems = hist.map(h => h.coinPremium).filter(v => v != null), premAvg = prems.length ? prems.reduce((a, b) => a + b, 0) / prems.length : null;
+  if (cheap) {
+    const dc = prevCoin ? chg(cheap.price, prevCoin.price) : null;
+    tiles.push(`<div class="b"><div class="k">Cheapest 10g coin</div><div class="v">₹${fmt(cheap.price, 0)}</div><div class="d ${cls(dc)}">${dc == null ? 'first day on record' : sgn(dc) + '% vs yesterday'}</div><p>${cheap.name}.${cheap.premium != null ? ' ' + cheap.premium.toFixed(1) + '% over IBJA with GST' + (premAvg != null ? ', ' + (cheap.premium > premAvg ? 'above' : 'below') + ' the ' + prems.length + '-day average of ' + premAvg.toFixed(1) + '%.' : '.') : ''}${prevCoin && prevCoin.name !== cheap.name ? ' Yesterday it was ' + prevCoin.name + '.' : ''}</p></div>`);
+    if (premAvg != null && cheap.premium != null && cheap.premium < premAvg - 1) watch.push(`<li><b>Coins:</b> today's cheapest premium is a full point under its recent average. Good day to buy physical if you were going to.</li>`);
+  } else tiles.push(`<div class="b"><div class="k">Cheapest 10g coin</div><div class="v">-</div><p>Coin prices did not load.</p></div>`);
+  // drivers
+  const ry = d.realYield && last(d.realYield), ryPrev = prev && prev.realYield, fx = d.fx && d.fx.price, fxPrev = prev && prev.usdinr;
+  const shNow = (d.gold && d.cny && d.sge && d.sge.length) ? (last(d.sge) / (d.gold.price * d.cny.price / 31.1035) - 1) * 100 : null, shPrev = prev && prev.shanghaiPremium;
+  const ryRun = prev5.length >= 3 ? prev5.every((h, i) => i === 0 || (h.realYield != null && prev5[i-1].realYield != null && h.realYield >= prev5[i-1].realYield)) : false;
+  tiles.push(`<div class="b"><div class="k">Drivers</div><div class="v">${ry != null ? ry.toFixed(2) + '%' : '-'}</div><div class="d ${cls(ryPrev != null && ry != null ? -(ry - ryPrev) : 0)}">real yield ${ryPrev != null && ry != null ? (ry - ryPrev >= 0 ? '+' : '') + (ry - ryPrev).toFixed(2) + ' pts' : ''}</div><p>USDINR ${fx ? fx.toFixed(2) : '-'}${fxPrev && fx ? ' (' + sgn(chg(fx, fxPrev)) + '%)' : ''}. Shanghai ${shNow != null ? (shNow >= 0 ? '+' : '') + shNow.toFixed(1) + '%' : '-'}${shPrev != null && shNow != null ? ' vs ' + (shPrev >= 0 ? '+' : '') + shPrev.toFixed(1) + '% yesterday' : ''} against London.</p></div>`);
+  if (ryRun) watch.push(`<li><b>Real yields</b> have risen every day this week. That is the main pressure on gold; nothing on the metal side offsets it until the copper line turns.</li>`);
+  if (shNow != null && shNow < -2) watch.push(`<li><b>Shanghai</b> is paying ${Math.abs(shNow).toFixed(1)}% less than London. Chinese buyers are absent; the world price has one less buyer under it.</li>`);
+  if (!watch.length) watch.push('<li>Nothing within 2.5% of a level and no driver on a run. A quiet day. Do nothing.</li>');
+  $('#brief').innerHTML = tiles.join(''); $('#watch').innerHTML = watch.join('');
+  $('#brief-sub').textContent = prev ? `Changes are measured against ${dmy(Date.parse(prev.day))}, the previous logged day.` : (H && H.configured ? 'First logged day. Changes appear from tomorrow.' : 'The log is not switched on yet; changes against yesterday appear once the store is connected.');
+  // log table
+  const rows = hist.slice(-20).reverse();
+  $('#log tbody').innerHTML = rows.length ? rows.map(r => `<tr class="${r.day === today ? 'today' : ''}"><td>${dmy(Date.parse(r.day))}</td><td class="n">${r.gb != null ? r.gb.toFixed(2) : '-'}</td><td class="n">${r.sb != null ? r.sb.toFixed(2) : '-'}</td><td class="n">${r.gold != null ? r.gold.toFixed(0) : '-'}</td><td class="n">${r.silver != null ? r.silver.toFixed(2) : '-'}</td><td class="n">${r.usdinr != null ? r.usdinr.toFixed(2) : '-'}</td><td class="n">${r.realYield != null ? r.realYield.toFixed(2) + '%' : '-'}</td><td class="n">${r.shanghaiPremium != null ? (r.shanghaiPremium >= 0 ? '+' : '') + r.shanghaiPremium.toFixed(1) + '%' : '-'}</td><td>${r.cheapest ? r.cheapest.name + ' ₹' + fmt(r.cheapest.price, 0) : '-'}</td><td class="n">${r.coinPremium != null ? '+' + r.coinPremium.toFixed(1) + '%' : '-'}</td></tr>`).join('') : '<tr><td colspan="10" style="color:#6B7280">No rows yet. The first snapshot writes after today\'s close.</td></tr>';
+}
+
 function dial(score) { // -3..+3
   const a = -90 + (score + 3) / 6 * 180;
   const rad = a * Math.PI / 180, cx = 170, cy = 150, r = 105;
@@ -299,8 +368,10 @@ function render(d) {
   $('#drivers').innerHTML = drv.map(x => `<div class="drv"><div class="k">${x.k}</div><div class="v">${x.v}</div>${x.c == null ? '' : `<div class="c ${cls(x.c)}">${pct(x.c)} in a month</div>`}${spark(x.s)}<p>${x.p}</p></div>`).join('');
 }
 
-fetch('/api/coins').then(r => r.json()).then(c => { const b = document.getElementById('teaser-b'); if (c.cheapest) b.textContent = `${c.cheapest.name} at ₹${c.cheapest.price.toLocaleString('en-IN')} for 10g, ${c.cheapest.premium != null ? c.cheapest.premium.toFixed(1) + '% over the metal' : 'GST included'}.`; else b.textContent = 'No seller could be read today. See the list.'; }).catch(() => { document.getElementById('teaser-b').textContent = 'Compare 10g coin prices across Indian sellers.'; });
-fetch(API).then(r => { if (!r.ok) throw new Error('API ' + r.status); return r.json(); }).then(render).catch(e => {
+const coinsP = fetch('/api/coins').then(r => r.json()).catch(() => null);
+const histP = fetch('/api/history').then(r => r.ok ? r.json() : null).catch(() => null);
+coinsP.then(c => { const b = document.getElementById('teaser-b'); if (!c) { b.textContent = 'Compare 10g coin prices across Indian sellers.'; return; } if (c.cheapest) b.textContent = `${c.cheapest.name} at ₹${c.cheapest.price.toLocaleString('en-IN')} for 10g, ${c.cheapest.premium != null ? c.cheapest.premium.toFixed(1) + '% over the metal' : 'GST included'}.`; else b.textContent = 'No seller could be read today. See the list.'; });
+fetch(API).then(r => { if (!r.ok) throw new Error('API ' + r.status); return r.json(); }).then(async d => { render(d); const [H, C] = await Promise.all([histP, coinsP]); try { renderBrief(d, H, C); } catch (e) { $('#brief-sub').textContent = 'Brief unavailable: ' + e.message; } }).catch(e => {
   $('#stamp').textContent = 'Live data not available.';
   $('#err').innerHTML = `Could not reach the price service (${e.message}). This page needs to run on Vercel with the api/quotes.js function deployed alongside it. Opening the file directly on your computer will show this message.`; $('#err').classList.remove('hide');
 });
