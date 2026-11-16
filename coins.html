@@ -89,7 +89,8 @@ const dmy = t => { const d = new Date(t); return `${String(d.getDate()).padStart
 
 function render(d) {
   const m = d.metal, best = d.cheapest, priced = d.sellers.filter(s => s.price), rest = d.sellers.filter(s => !s.price);
-  $('#stamp').textContent = `Read ${dmy(d.fetched)} IST. ${priced.length} sellers priced, ${rest.length} listed for manual check.`;
+  const spread = priced.length > 1 ? ((priced[priced.length - 1].price / priced[0].price - 1) * 100).toFixed(1) : null;
+  $('#stamp').textContent = `Read ${dmy(d.fetched)} IST. ${priced.length} sellers priced${spread ? ', ' + spread + '% between cheapest and dearest' : ''}, ${rest.length} listed for manual check.`;
   if (best) {
     const save = priced.length > 1 ? priced[priced.length - 1].price - best.price : null;
     $('#win').innerHTML = `<span class="sym">Cheapest today</span><div class="big">${fmt(best.price)}</div><div class="seller">${best.name}</div><div class="meta">${best.product}. ${best.premium != null ? best.premium.toFixed(1) + '% over the metal, GST included.' : ''} ${save ? 'Saves ' + fmt(save) + ' against the dearest seller read today.' : ''}</div><a class="btn" href="${best.url}" target="_blank" rel="noopener">Open ${best.name}</a>`;
@@ -104,7 +105,7 @@ function render(d) {
   ].map(t => `<div class="tile"><div class="k">${t[0]}</div><div class="v">${t[1]}</div><p>${t[2]}</p></div>`).join('') : '<div class="tile"><div class="k">Metal value</div><div class="v">-</div><p>Reference price did not load.</p></div>';
   const maxPrem = Math.max(...priced.map(s => s.premium || 0), 1);
   $('#tbl tbody').innerHTML = d.sellers.map((s, i) => {
-    const st = s.status === 'ok' ? '<span class="tag ok">read</span>' : s.status === 'manual' ? '<span class="tag">check manually</span>' : `<span class="tag bad">${s.status}</span>`;
+    const st = s.status === 'ok' ? (s.via ? '<span class="tag ok">google feed</span>' : '<span class="tag ok">read</span>') : s.status === 'manual' ? '<span class="tag">check manually</span>' : `<span class="tag bad">${s.status}</span>`;
     return `<tr class="${i === 0 && s.price ? 'best' : ''}"><td><b>${s.name}</b><br><span class="meta">${s.type}</span></td><td><a href="${s.url}" target="_blank" rel="noopener">${s.product}</a></td><td class="n">${s.price ? fmt(s.price) : '-'}</td><td class="n">${s.premium != null ? (s.premium >= 0 ? '+' : '') + s.premium.toFixed(1) + '%<div class="bar"><i style="width:' + Math.max(0, s.premium / maxPrem * 100).toFixed(0) + '%"></i></div>' : '-'}</td><td>${st}</td></tr>`;
   }).join('');
 }

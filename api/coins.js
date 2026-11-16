@@ -108,6 +108,23 @@ async function googleShopping() {
   return Object.values(seen);
 }
 
+// Normalise merchant names from the Google feed to the desk's seller names and types.
+const MERCHANTS = [
+  [/mmtc|pamp/i, 'MMTC-PAMP', 'Refiner', 'mmtc'], [/tanishq/i, 'Tanishq', 'Jeweller', 'tanishq'], [/malabar/i, 'Malabar Gold & Diamonds', 'Jeweller', 'malabar'],
+  [/senco/i, 'Senco Gold & Diamonds', 'Jeweller', 'senco'], [/png/i, 'PNG Jewellers', 'Jeweller', 'png'], [/grt/i, 'GRT Jewellers', 'Jeweller', 'grt'],
+  [/pc jeweller|p\.?c\.? jeweller/i, 'PC Jeweller', 'Jeweller', 'pcj'], [/reliance/i, 'Reliance Jewels', 'Jeweller', 'reliance'], [/bangalore refinery/i, 'Bangalore Refinery', 'Refiner', 'bangalore'],
+  [/bluestone/i, 'BlueStone', 'Jeweller', 'bluestone'], [/caratlane/i, 'CaratLane', 'Jeweller', 'caratlane'], [/candere|kalyan/i, 'Candere by Kalyan', 'Jeweller', 'candere'],
+  [/joyalukkas/i, 'Joyalukkas', 'Jeweller', 'joyalukkas'], [/augmont/i, 'Augmont', 'Refiner', 'augmont'],
+  [/amazon/i, 'Amazon.in', 'Marketplace', 'amazon'], [/flipkart/i, 'Flipkart', 'Marketplace', 'flipkart'], [/myntra/i, 'Myntra', 'Marketplace', 'myntra'],
+  [/tata cliq/i, 'Tata CLiQ', 'Marketplace', 'tatacliq'], [/ajio/i, 'Ajio', 'Marketplace', 'ajio'],
+];
+function normalise(o) {
+  for (const [rx, name, type, id] of MERCHANTS) if (rx.test(o.name)) { o.name = name; o.type = type; o.matchId = id; break; }
+  if (!o.matchId) o.type = /\.(in|com)/i.test(o.name) ? 'Marketplace' : 'Jeweller';
+  o.via = 'Google Shopping';
+  return o;
+}
+
 async function metal() {
   // Landed value of 10 g gold in India: spot x USDINR / 31.1035 x 10, plus 6% import duty. GST is added separately at 3%.
   const y = async s => { const r = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(s)}?range=5d&interval=1d`, UA); const j = await r.json(); return j.chart.result[0].meta.regularMarketPrice; };
@@ -120,7 +137,14 @@ async function metal() {
 
 export default async function handler(req, res) {
   const [direct, m, gs] = await Promise.all([Promise.all(SOURCES.map(readSource)), metal().catch(() => null), googleShopping().catch(e => [{ id: 'gs-error', name: 'Google Shopping', type: 'via Google Shopping', product: 'feed', url: '#', price: null, status: 'error: ' + e.message.slice(0, 40) }])]);
-  const sellers = direct.concat(gs);
+  // Merge: a Google listing replaces a direct row with no price, and the cheaper of the two wins when both have one.
+  const byId = {}; for (const d of direct) byId[d.id] = d;
+  for (const g of gs.map(normalise)) {
+    const d = g.matchId ? byId[g.matchId] : null;
+    if (d) { if (!d.price || g.price < d.price) { d.price = g.price; d.product = g.product; d.url = g.url; d.status = 'ok'; d.via = 'Google Shopping'; } }
+    else byId[g.id] = g;
+  }
+  const sellers = Object.values(byId);
   const priced = sellers.filter(s => s.price).sort((a, b) => a.price - b.price);
   if (m) for (const s of priced) s.premium = (s.price / m.landedWithGst - 1) * 100;
   res.setHeader('Cache-Control', 's-maxage=1800, stale-while-revalidate=3600');
