@@ -100,7 +100,7 @@ function render(d) {
     ['Landed value of 10g gold', fmt(m.landed10g), 'Spot gold at today\'s rupee rate plus 6% duty, before GST. The floor no seller can go under.'],
     ['Same value with 3% GST', fmt(m.landedWithGst), 'What a zero-margin coin would cost. Premiums are measured against this.'],
     ['Gold in dollars', '$' + m.goldUsd.toLocaleString('en-US', { maximumFractionDigits: 0 }), 'COMEX, per ounce'],
-    ['GOLDBEES, one unit', '₹' + m.goldbees.toFixed(2), 'The ETF route: no making charge, no GST, no locker, but no coin in hand.'],
+    ['GOLDBEES, one unit', m.goldbees ? '₹' + m.goldbees.toFixed(2) : '-', 'The ETF route: no making charge, no GST, no locker, but no coin in hand.'],
   ].map(t => `<div class="tile"><div class="k">${t[0]}</div><div class="v">${t[1]}</div><p>${t[2]}</p></div>`).join('') : '<div class="tile"><div class="k">Metal value</div><div class="v">-</div><p>Reference price did not load.</p></div>';
   const maxPrem = Math.max(...priced.map(s => s.premium || 0), 1);
   $('#tbl tbody').innerHTML = d.sellers.map((s, i) => {
@@ -109,7 +109,18 @@ function render(d) {
   }).join('');
 }
 
-fetch('/api/coins').then(r => { if (!r.ok) throw new Error('API ' + r.status); return r.json(); }).then(render).catch(e => {
+Promise.all([
+  fetch('/api/coins').then(r => { if (!r.ok) throw new Error('API ' + r.status); return r.json(); }),
+  fetch('/api/quotes').then(r => r.ok ? r.json() : null).catch(() => null)
+]).then(([d, q]) => {
+  if (!d.metal && q && q.gold && q.fx) {
+    const landed10g = q.gold.price * q.fx.price / 31.1035 * 10 * 1.06;
+    d.metal = { goldUsd: q.gold.price, usdinr: q.fx.price, landed10g, landedWithGst: landed10g * 1.03, goldbees: q.gb ? q.gb.price : null };
+  }
+  if (d.metal) for (const s of d.sellers) if (s.price) s.premium = (s.price / d.metal.landedWithGst - 1) * 100;
+  if (d.cheapest && d.metal) d.cheapest.premium = (d.cheapest.price / d.metal.landedWithGst - 1) * 100;
+  render(d);
+}).catch(e => {
   $('#stamp').textContent = 'Live data not available.';
   $('#err').textContent = `Could not reach the price service (${e.message}). This page runs on Vercel with api/coins.js beside it.`; $('#err').classList.remove('hide');
 });
