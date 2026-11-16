@@ -2,6 +2,8 @@
 // Every seller has its own page layout, so each read is best effort and reports its own status.
 // Marketplaces that render prices by script or block automated reads are listed with a link and no number.
 
+import { ibja } from '../lib/desk.js';
+
 const UA = { headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36', 'Accept-Language': 'en-IN,en;q=0.9' } };
 const LO = 60000, HI = 300000;
 // Optional: set SCRAPER_KEY in Vercel to route bot-protected sellers through ScraperAPI. Without it they are attempted directly.
@@ -94,7 +96,7 @@ async function readSource(s) {
 // Optional: Google Shopping via SerpApi. Set SERPAPI_KEY in Vercel. One query returns merchants' own feed prices.
 async function googleShopping() {
   const key = process.env.SERPAPI_KEY; if (!key) return [];
-  const url = `https://serpapi.com/search.json?engine=google_shopping&q=${encodeURIComponent('10 gram 24k gold coin')}&gl=in&hl=en&location=India&num=40&api_key=${key}`;
+  const url = `https://serpapi.com/search.json?engine=google_shopping&q=${encodeURIComponent('10 gram 24k gold coin')}&gl=in&hl=en&location=India&num=100&api_key=${key}`;
   const r = await fetch(url); if (!r.ok) throw new Error('serpapi ' + r.status);
   const j = await r.json(); const out = [];
   for (const it of j.shopping_results || []) {
@@ -128,11 +130,13 @@ function normalise(o) {
 async function metal() {
   // Landed value of 10 g gold in India: spot x USDINR / 31.1035 x 10, plus 6% import duty. GST is added separately at 3%.
   const y = async s => { const r = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(s)}?range=5d&interval=1d`, UA); const j = await r.json(); return j.chart.result[0].meta.regularMarketPrice; };
-  const r = await Promise.allSettled([y('GC=F'), y('INR=X'), y('GOLDBEES.NS')]);
-  const [gold, fx, gb] = r.map(x => x.status === 'fulfilled' ? x.value : null);
-  if (!gold || !fx) return null;
-  const landed10g = gold * fx / 31.1035 * 10 * 1.06;
-  return { goldUsd: gold, usdinr: fx, landed10g, landedWithGst: landed10g * 1.03, goldbees: gb };
+  const r = await Promise.allSettled([y('GC=F'), y('INR=X'), y('GOLDBEES.NS'), ibja()]);
+  const [gold, fx, gb, ib] = r.map(x => x.status === 'fulfilled' ? x.value : null);
+  if (!ib && !(gold && fx)) return null;
+  // Reference is the IBJA 999 rate (the Indian trade benchmark). The duty-based landed value is kept only as a check.
+  const landed10g = gold && fx ? gold * fx / 31.1035 * 10 * 1.06 : null;
+  const ref10g = ib ? ib.gold999_10g : landed10g;
+  return { goldUsd: gold, usdinr: fx, goldbees: gb, ibja: ib, ref10g, refWithGst: ref10g * 1.03, refName: ib ? `IBJA 999 ${ib.date}` : 'landed value (spot plus 6% duty)', landed10g, landedWithGst: landed10g ? landed10g * 1.03 : null };
 }
 
 export default async function handler(req, res) {
@@ -146,8 +150,8 @@ export default async function handler(req, res) {
   }
   const sellers = Object.values(byId);
   const priced = sellers.filter(s => s.price).sort((a, b) => a.price - b.price);
-  if (m) for (const s of priced) s.premium = (s.price / m.landedWithGst - 1) * 100;
-  res.setHeader('Cache-Control', 's-maxage=1800, stale-while-revalidate=3600');
+  if (m) for (const s of priced) s.premium = (s.price / m.refWithGst - 1) * 100;
+  res.setHeader('Cache-Control', 's-maxage=43200, stale-while-revalidate=86400'); // 12 h: two Google requests a day at most
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.status(200).json({ fetched: Date.now(), metal: m, cheapest: priced[0] || null, sellers: [...priced, ...sellers.filter(s => !s.price)] });
 }

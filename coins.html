@@ -79,7 +79,7 @@ td a{color:var(--slate)}
 <p class="sub">A coin's price is the metal, plus a making charge (1% to 8% depending on the seller), plus 3% GST on the lot. Refiners such as MMTC-PAMP usually charge the lowest premium; big jewellers charge more and offer exchange against jewellery later. Buyback terms matter as much as the headline price: a seller that buys back at the day's rate with no deduction is worth a slightly higher premium. Check the hallmark (BIS, with HUID) and the purity stamp (999 or 999.9, not 995, unless priced for it) before paying.</p>
 </section>
 
-<p class="note" id="note">Prices are read from each seller's public page at the time shown and are the seller's advertised price including GST; they can change within the day and may differ by delivery city or card offer. Landed metal value is the COMEX gold price converted at the interbank USDINR rate, per gram, times ten, plus 6% customs duty; GST of 3% is added for the premium comparison. Marketplaces and app-only sellers are listed with a link only. Not investment advice.</p>
+<p class="note" id="note">Prices are read from each seller's public page at the time shown and are the seller's advertised price including GST; they can change within the day and may differ by delivery city or card offer. The benchmark is the IBJA 999 gold rate (India Bullion and Jewellers Association), published on trading days, per 10 grams before GST; 3% GST is added for the premium comparison. If IBJA is unavailable the page falls back to COMEX gold converted at the interbank USDINR rate plus 6% customs duty, and says so. Marketplaces and app-only sellers are listed with a link only. Not investment advice.</p>
 </div>
 
 <script>
@@ -98,8 +98,8 @@ function render(d) {
     $('#win').innerHTML = `<span class="sym">Cheapest today</span><div class="seller">No seller could be read today</div><div class="meta">Use the links in the table to check prices by hand.</div>`;
   }
   $('#tiles').innerHTML = m ? [
-    ['Landed value of 10g gold', fmt(m.landed10g), 'Spot gold at today\'s rupee rate plus 6% duty, before GST. The floor no seller can go under.'],
-    ['Same value with 3% GST', fmt(m.landedWithGst), 'What a zero-margin coin would cost. Premiums are measured against this.'],
+    ['Benchmark, 10g 999 gold', fmt(m.ref10g), (m.ibja ? 'IBJA rate, ' + m.ibja.date + ', the price Indian jewellers and the RBI work from, before GST.' : 'Spot gold at today\'s rupee rate plus 6% duty, before GST. IBJA did not load.')],
+    ['Benchmark with 3% GST', fmt(m.refWithGst), 'What a zero-margin coin would cost. Every premium on this page is measured against this.'],
     ['Gold in dollars', '$' + m.goldUsd.toLocaleString('en-US', { maximumFractionDigits: 0 }), 'COMEX, per ounce'],
     ['GOLDBEES, one unit', m.goldbees ? '₹' + m.goldbees.toFixed(2) : '-', 'The ETF route: no making charge, no GST, no locker, but no coin in hand.'],
   ].map(t => `<div class="tile"><div class="k">${t[0]}</div><div class="v">${t[1]}</div><p>${t[2]}</p></div>`).join('') : '<div class="tile"><div class="k">Metal value</div><div class="v">-</div><p>Reference price did not load.</p></div>';
@@ -116,10 +116,10 @@ Promise.all([
 ]).then(([d, q]) => {
   if (!d.metal && q && q.gold && q.fx) {
     const landed10g = q.gold.price * q.fx.price / 31.1035 * 10 * 1.06;
-    d.metal = { goldUsd: q.gold.price, usdinr: q.fx.price, landed10g, landedWithGst: landed10g * 1.03, goldbees: q.gb ? q.gb.price : null };
+    d.metal = { goldUsd: q.gold.price, usdinr: q.fx.price, ref10g: landed10g, refWithGst: landed10g * 1.03, refName: 'landed value (spot plus 6% duty)', goldbees: q.gb ? q.gb.price : null };
   }
-  if (d.metal) for (const s of d.sellers) if (s.price) s.premium = (s.price / d.metal.landedWithGst - 1) * 100;
-  if (d.cheapest && d.metal) d.cheapest.premium = (d.cheapest.price / d.metal.landedWithGst - 1) * 100;
+  if (d.metal) for (const s of d.sellers) if (s.price) s.premium = (s.price / d.metal.refWithGst - 1) * 100;
+  if (d.cheapest && d.metal) d.cheapest.premium = (d.cheapest.price / d.metal.refWithGst - 1) * 100;
   render(d);
 }).catch(e => {
   $('#stamp').textContent = 'Live data not available.';
