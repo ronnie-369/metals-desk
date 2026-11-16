@@ -27,7 +27,23 @@ export default async function handler(req, res) {
   if (rec.sb && rec.sbNav) rec.sbPremium = (rec.sb / rec.sbNav - 1) * 100;
 
   if (!kvReady()) return res.status(200).json({ stored: false, reason: 'KV not configured', rec });
-  const hist = (await kvGet('history')) || [];
+  let hist = (await kvGet('history')) || [];
+  // Backfill: when history is thin, rebuild recent days from the price series so "since yesterday" works from day one.
+  if (hist.length < 20 && q) {
+    const byDay = {};
+    const put = (series, key) => (series || []).forEach(([t, v]) => { const d = new Date(t).toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }); (byDay[d] = byDay[d] || { day: d })[key] = v; });
+    put(q.gb?.series, 'gb'); put(q.sb?.series, 'sb'); put(q.gold?.series, 'gold'); put(q.silver?.series, 'silver');
+    put(q.fx?.series, 'usdinr'); put(q.cny?.series, 'usdcny'); put(q.realYield, 'realYield'); put(q.nomYield, 'nomYield'); put(q.sge, 'sge');
+    const days = Object.keys(byDay).sort().slice(-60).filter(d => d < day && byDay[d].gb);
+    const existing = Object.fromEntries(hist.map(h => [h.day, h]));
+    for (const d of days) {
+      const b = byDay[d];
+      if (b.gold && b.usdcny && b.sge) b.shanghaiPremium = (b.sge / (b.gold * b.usdcny / 31.1035) - 1) * 100;
+      b.backfilled = true;
+      existing[d] = Object.assign(b, existing[d] || {});
+    }
+    hist = Object.values(existing).sort((a, b) => a.day < b.day ? -1 : 1);
+  }
   const i = hist.findIndex(h => h.day === day);
   if (i > -1) hist[i] = rec; else hist.push(rec);
   while (hist.length > 400) hist.shift();
