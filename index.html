@@ -234,7 +234,22 @@ function renderRates(d) {
 
 function renderChina(d) {
   const g = d.gold, cny = d.cny, sg = d.sge;
-  if (!g || !cny || !sg || !sg.length) { $('#cnchart').innerHTML = '<p class="sub" style="padding:16px">Shanghai benchmark did not load today. The exchange publishes on Chinese trading days only.</p>'; return; }
+  if (!g || !cny || !sg || !sg.length) {
+    const lastFix = d.sgeLast, nxt = d.sgeNext;
+    if (lastFix && g && cny) {
+      const lon = g.price * cny.price / 31.1035, prem = (lastFix.value / lon - 1) * 100;
+      $('#cntiles').innerHTML =
+        tile('Shanghai benchmark, last fix', '¥' + fmt(lastFix.value, 2), null, 'Yuan per gram, ' + dmy(Date.parse(lastFix.day)) + '. No fix received today.') +
+        tile('London price in yuan', '¥' + fmt(lon, 2), null, 'World price converted at today\'s yuan rate') +
+        tile('Shanghai premium, last fix', (prem >= 0 ? '+' : '') + prem.toFixed(2) + '%', { n: prem, t: 'against today\'s London price' }, 'Stale: compares the last Shanghai fix with the live London price.') +
+        tile('Next fix due', nxt || 'next Chinese trading day', null, 'Shanghai PM benchmark, weekdays about 11:45 IST, published shortly after. Chinese public holidays are not modelled.');
+      $('#cnchart').innerHTML = '<p class="sub" style="padding:16px">No Shanghai history for the chart today. The last fix is shown in the tiles above.</p>';
+    } else {
+      $('#cntiles').innerHTML = tile('Shanghai benchmark', '-', null, 'No fix received today and none stored yet.') + tile('Next fix due', nxt || 'next Chinese trading day', null, 'Shanghai PM benchmark, weekdays about 11:45 IST.');
+      $('#cnchart').innerHTML = '<p class="sub" style="padding:16px">Shanghai benchmark did not load today.</p>';
+    }
+    return;
+  }
   // London price in yuan per gram, matched by day
   const cnyBy = {}; cny.series.forEach(p => cnyBy[new Date(p[0]).toDateString()] = p[1]);
   const goldBy = {}; g.series.forEach(p => goldBy[new Date(p[0]).toDateString()] = p[1]);
