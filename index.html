@@ -258,7 +258,7 @@ function renderChina(d) {
   const premSeries = sg.map(p => { const k = new Date(p[0]).toDateString(); const gv = goldBy[k], cv = cnyBy[k]; return gv && cv ? (p[1] / (gv * cv / 31.1035) - 1) * 100 : null; }).filter(v => v != null);
   const premAvg = premSeries.reduce((a, b) => a + b, 0) / premSeries.length;
   $('#cntiles').innerHTML =
-    tile('Shanghai benchmark, PM', '¥' + fmt(shNow, 2), null, 'Yuan per gram, Shanghai Gold Exchange, ' + dmy(sg[sg.length - 1][0])) +
+    tile(d.sgeStale ? 'Shanghai benchmark, last stored fix' : 'Shanghai benchmark, PM', '¥' + fmt(shNow, 2), null, 'Yuan per gram, Shanghai Gold Exchange, ' + dmy(sg[sg.length - 1][0]) + (d.sgeStale ? '. The exchange did not answer today; next fix due ' + (d.sgeNext || 'next Chinese trading day') + '.' : '')) +
     tile('London price in yuan', '¥' + fmt(lonNow, 2), null, 'World price converted at today\'s yuan rate') +
     tile('Shanghai premium', (prem >= 0 ? '+' : '') + prem.toFixed(2) + '%', { n: prem, t: 'avg ' + (premAvg >= 0 ? '+' : '') + premAvg.toFixed(2) + '% over the period' }, prem > 1 ? 'China is paying up. Physical demand is strong.' : prem < -1 ? 'China is paying less than London. Chinese buyers have stepped back.' : 'Shanghai and London are in line.') +
     tile('Yuan per dollar', fmt(cny.price, 3), { n: ret(cny.series, 30, cny.price), t: pct(ret(cny.series, 30, cny.price)) + ' in a month' }, 'A weaker yuan makes gold dearer in China, as it does in India.');
